@@ -3,6 +3,10 @@ from datashader import transfer_functions as tf
 from datashader_tms.tiles_serial import render_tiles
 from colorcet import cm
 
+import warnings
+
+warnings.simplefilter("ignore")
+
 
 class StaticRenderer:
     data = None
@@ -19,13 +23,18 @@ class StaticRenderer:
         self.output_path = output_path
 
     def render_to_disk(self):
-        render_tiles(self._get_extents(),
-                     range(self.min_zoom, self.max_zoom),
-                     load_data_func=self._load_data_func,
-                     rasterize_func=self._rasterize_func,
-                     shader_func=self._shader_func,
-                     post_render_func=self._post_render_func,
-                     output_path=self.output_path)
+        for result in render_tiles(self._get_extents(),
+                                   range(self.min_zoom, self.max_zoom),
+                                   load_data_func=self._load_data_func,
+                                   rasterize_func=self._rasterize_func,
+                                   shader_func=self._shader_func,
+                                   post_render_func=self._post_render_func,
+                                   output_path=self.output_path):
+            print('Rendered {} supertiles for zoom level {} with span={} in {:.2f}s.'.format(result['supertile_count'],
+                                                                                              result['level'],
+                                                                                              result['stats'],
+                                                                                              result['calc_stats_time'] +
+                                                                                              result['render_time']))
 
     def _get_extents(self):
         return self.data.x.min(), self.data.y.min(), self.data.x.max(), self.data.y.max()

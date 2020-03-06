@@ -3,6 +3,9 @@ import panel as pn
 from colorcet import cm
 from holoviews.operation.datashader import rasterize, shade
 from holoviews.element.tiles import CartoDark
+import warnings
+
+warnings.simplefilter("ignore")
 
 hv.extension('bokeh', logo=False)
 

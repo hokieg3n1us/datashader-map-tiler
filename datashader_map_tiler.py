@@ -17,10 +17,12 @@ def main():
                         choices=['Dynamic', 'Static'], help='Render Mode:')
     parser.add_argument('file_format', choices=['CSV', 'Parquet'], help='File Format:')
     parser.add_argument("file", help="File:", widget="FileChooser")
+    parser.add_argument('coordinate_system',
+                        choices=['WGS84', 'Web Mercator'], help='Coordinate System:')
     parser.add_argument('longitude', default='longitude', type=str,
-                        help='Column name containing longitude (in WGS84 format).')
+                        help='Column name containing longitudinal value (x axis).')
     parser.add_argument('latitude', default='latitude', type=str,
-                        help='Column name containing latitude (in WGS84 format).')
+                        help='Column name containing latitudinal value (y axis).')
     parser.add_argument('color_map',
                         choices=['fire', 'bgy', 'bgyw', 'kbc', 'blues', 'bmw', 'bmy', 'kgy', 'gray', 'dimgray', 'kb',
                                  'kg', 'kr'], help='Colormap:')
@@ -36,7 +38,7 @@ def main():
         print("Minimum zoom level must be less than or equal to maximum zoom level.")
         exit(-1)
 
-    data = _load_data(args.file_format, args.file, args.longitude, args.latitude)
+    data = _load_data(args.file_format, args.file, args.coordinate_system, args.longitude, args.latitude)
 
     if args.mode == 'Static':
         static_renderer = StaticRenderer(data, args.color_map, args.min_zoom, args.max_zoom, args.output_path)
@@ -47,7 +49,7 @@ def main():
         dynamic_renderer.render_to_browser()
 
 
-def _load_data(file_format, file, longitude, latitude):
+def _load_data(file_format, file, coordinate_system, longitude, latitude):
     df = None
 
     if file_format == 'CSV':
@@ -55,13 +57,14 @@ def _load_data(file_format, file, longitude, latitude):
     elif file_format == 'Parquet':
         df = pd.read_parquet(file, columns=[longitude, latitude])
 
-    # EPSG3857 Coordinate System only supports Latitude bounds of -85.06 to 85.06
-    df = df.loc[df[latitude].between(-85.06, 85.06)]
-
-    # Convert to XY Coordinate System
-    df['x'], df['y'] = lnglat_to_meters(df[longitude], df[latitude])
-
-    df = df.drop(columns=[longitude, latitude], axis=1)
+    if coordinate_system == 'WGS84':
+        # EPSG3857 Coordinate System only supports Latitude bounds of -85.06 to 85.06
+        df = df.loc[df[latitude].between(-85.06, 85.06)]
+        # Convert to XY Coordinate System
+        df['x'], df['y'] = lnglat_to_meters(df[longitude], df[latitude])
+        df = df.drop(columns=[longitude, latitude], axis=1)
+    elif coordinate_system == 'Web Mercator':
+        df = df.rename(columns={longitude: 'x', latitude: 'y'})
 
     return df
 

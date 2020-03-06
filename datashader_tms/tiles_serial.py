@@ -12,6 +12,10 @@ import numpy as np
 
 from PIL.Image import fromarray
 
+import warnings
+
+warnings.simplefilter("ignore")
+
 __all__ = ['render_tiles', 'MercatorTileDefinition']
 
 
@@ -54,23 +58,23 @@ def calculate_zoom_level_stats(super_tiles, load_data_func,
 def render_tiles(full_extent, levels, load_data_func,
                  rasterize_func, shader_func,
                  post_render_func, output_path, color_ranging_strategy='fullscan'):
-    results = dict()
     for level in levels:
-        print('Calculating statistics for level {}.'.format(level))
         stats_start_time = timeit.default_timer()
         super_tiles, span = calculate_zoom_level_stats(list(gen_super_tiles(full_extent, level)),
                                                        load_data_func, rasterize_func,
                                                        color_ranging_strategy=color_ranging_strategy)
         stats_elapsed = timeit.default_timer() - stats_start_time
-        print('Took {0:.2f}s.'.format(stats_elapsed))
-        print('Rendering {} supertiles for zoom level {} with span={}.'.format(len(super_tiles), level, span))
         render_start_time = timeit.default_timer()
         b = db.from_sequence(super_tiles)
         b.map(render_super_tile, span, output_path, shader_func, post_render_func).compute()
-        results[level] = dict(success=True, stats=span, supertile_count=len(super_tiles))
         render_elapsed = timeit.default_timer() - render_start_time
-        print('Took {0:.2f}s.'.format(render_elapsed))
-    return results
+        yield {
+            'level': level,
+            'stats': span,
+            'supertile_count': len(super_tiles),
+            'calc_stats_time': stats_elapsed,
+            'render_time': render_elapsed
+        }
 
 
 def gen_super_tiles(extent, zoom_level, span=None):

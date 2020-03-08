@@ -3,11 +3,10 @@ import os
 import multiprocessing
 
 from datashader.utils import lnglat_to_meters
-from static_render import StaticRenderer
-from dynamic_render import DynamicRenderer
+from modes.static_render import StaticRenderer
+from modes.dynamic_render import DynamicRenderer
 import pandas as pd
 import dask.dataframe as dd
-
 
 def _render(params):
     data = _load_data(params['file_format'], params['file_path'], params['coordinate_system'], params['longitude'],
@@ -93,7 +92,7 @@ if __name__ == '__main__':
 
         def build(self):
             Window.bind(on_request_close=self.on_request_close)
-            img_0 = Image(source='osm_level_0.png', size_hint=(.5, .5), pos_hint={'x': .55, 'y': -0.1})
+            img_0 = Image(source='images/osm_level_0.png', size_hint=(.5, .5), pos_hint={'x': .55, 'y': -0.1})
             self.app.add_widget(img_0)
             self.build_mode_options()
             self.build_coordinate_system_options()

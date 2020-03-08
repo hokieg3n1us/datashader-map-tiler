@@ -19,3 +19,10 @@ Datashader Map Tiler is a Kivy-based Python application for rendering of large s
 * Min Zoom - The minimum zoom level for the TMS tileset
 * Max Zoom - The maximum zoom level for the TMS tileset
 * Output Directory - The directory that Datashader Map Tiler will use for storing Static TMS tileset
+
+Create a Conda environment and run:
+
+    cd datashader-map-tiler
+    conda env create --name datashader-map-tiler --file environment.yml
+    conda activate datashader-map-tiler
+    python datashader-map-tiler

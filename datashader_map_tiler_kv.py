@@ -6,6 +6,7 @@ from datashader.utils import lnglat_to_meters
 from static_render import StaticRenderer
 from dynamic_render import DynamicRenderer
 import pandas as pd
+import dask.dataframe as dd
 
 
 def _render(params):
@@ -18,8 +19,13 @@ def _render(params):
         static_renderer.render_to_disk()
         exit(0)
     elif params['mode'] == 'Dynamic':
+        data = dd.from_pandas(data, npartitions=multiprocessing.cpu_count())
         dynamic_renderer = DynamicRenderer(data, params['color_map'])
         dynamic_renderer.render_to_browser()
+
+
+def _extract_coordinates(geometry):
+    return geometry.centroid.x, geometry.centroid.y
 
 
 def _load_data(file_format, file, coordinate_system, longitude, latitude):
@@ -65,6 +71,7 @@ if __name__ == '__main__':
 
 
     class DatashaderMapTiler(App):
+        title = 'Datashader Map Tiler'
         mode = 'Dynamic'
         coordinate_system = 'WGS84'
         file_format = 'CSV'
@@ -86,9 +93,7 @@ if __name__ == '__main__':
 
         def build(self):
             Window.bind(on_request_close=self.on_request_close)
-            img_datashader = Image(source='datashader-logo.png', size_hint=(.75, .18), pos_hint={'x': .1, 'y': .82})
-            img_0 = Image(source='osm_level_0.png',size_hint=(.35, .35), pos_hint={'x': .675, 'y': -0.1})
-            self.app.add_widget(img_datashader)
+            img_0 = Image(source='osm_level_0.png', size_hint=(.5, .5), pos_hint={'x': .55, 'y': -0.1})
             self.app.add_widget(img_0)
             self.build_mode_options()
             self.build_coordinate_system_options()
@@ -98,17 +103,17 @@ if __name__ == '__main__':
             self.build_colormap_options()
             self.build_optional_arguments()
             self.build_output_path_options()
-            self.btn_render_button = Button(text='Render Tiles', size_hint=(.15, .05), pos_hint={'x': .4, 'y': .1})
+            self.btn_render_button = Button(text='Render Tiles', size_hint=(.15, .05), pos_hint={'x': .4, 'y': .2})
             self.btn_render_button.bind(on_release=self.run_render)
             self.app.add_widget(self.btn_render_button)
             return self.app
 
         def build_mode_options(self):
-            lbl_mode = Label(text='Mode:', size_hint=(.1, .05), pos_hint={'x': .08, 'y': .75})
+            lbl_mode = Label(text='Mode:', size_hint=(.1, .05), pos_hint={'x': .08, 'y': .9})
             btn_mode_dynamic = ToggleButton(text='Dynamic', group='mode', state='down', size_hint=(.1, .05),
-                                            pos_hint={'x': .16, 'y': .75})
+                                            pos_hint={'x': .16, 'y': .9})
             btn_mode_static = ToggleButton(text='Static', group='mode', size_hint=(.1, .05),
-                                           pos_hint={'x': .26, 'y': .75})
+                                           pos_hint={'x': .26, 'y': .9})
             btn_mode_dynamic.bind(on_release=self.toggle_mode)
             btn_mode_static.bind(on_release=self.toggle_mode)
             self.app.add_widget(lbl_mode)
@@ -116,11 +121,11 @@ if __name__ == '__main__':
             self.app.add_widget(btn_mode_static)
 
         def build_coordinate_system_options(self):
-            lbl_coordinate_system = Label(text='Coordinate System:', size_hint=(.1, .05), pos_hint={'x': .45, 'y': .75})
+            lbl_coordinate_system = Label(text='Coordinate System:', size_hint=(.1, .05), pos_hint={'x': .45, 'y': .9})
             btn_coordinate_system_wgs84 = ToggleButton(text='WGS84', group='coordinate_system', state='down',
-                                                       size_hint=(.14, .05), pos_hint={'x': .59, 'y': .75})
+                                                       size_hint=(.14, .05), pos_hint={'x': .59, 'y': .9})
             btn_coordinate_system_webmercator = ToggleButton(text='Web Mercator', group='coordinate_system',
-                                                             size_hint=(.14, .05), pos_hint={'x': .73, 'y': .75})
+                                                             size_hint=(.14, .05), pos_hint={'x': .73, 'y': .9})
             btn_coordinate_system_wgs84.bind(on_release=self.toggle_coordinate_system)
             btn_coordinate_system_webmercator.bind(on_release=self.toggle_coordinate_system)
             self.app.add_widget(lbl_coordinate_system)
@@ -128,16 +133,17 @@ if __name__ == '__main__':
             self.app.add_widget(btn_coordinate_system_webmercator)
 
         def build_file_format_options(self):
-            spn_file_format = Spinner(text='File Format', values=('CSV', 'Parquet'), size_hint=(.15, .05),
-                                      pos_hint={'x': .12, 'y': .65}, sync_height=True)
+            spn_file_format = Spinner(text='File Format', values=('CSV', 'Parquet'),
+                                      size_hint=(.15, .05),
+                                      pos_hint={'x': .12, 'y': .8}, sync_height=True)
             spn_file_format.bind(text=self.select_file_format)
             self.app.add_widget(spn_file_format)
 
         def build_file_selection_options(self):
-            lbl_file_path = Label(text='Input Data', size_hint=(.1, .05), pos_hint={'x': 0.5, 'y': .65})
-            text_file_path = TextInput(text="", multiline=False, size_hint=(.5, .05), pos_hint={'x': .3, 'y': .6})
+            lbl_file_path = Label(text='Input Data', size_hint=(.1, .05), pos_hint={'x': 0.5, 'y': .8})
+            text_file_path = TextInput(text="", multiline=False, size_hint=(.5, .05), pos_hint={'x': .3, 'y': .75})
             text_file_path.bind(text=self.select_file_path)
-            btn_file_dialog = Button(text='Browse', size_hint=(.09, .05), pos_hint={'x': .8, 'y': .6})
+            btn_file_dialog = Button(text='Browse', size_hint=(.09, .05), pos_hint={'x': .8, 'y': .75})
             btn_file_dialog.bind(on_release=lambda show_file_selection_dialog: file_chooser_dialog.open())
             self.app.add_widget(lbl_file_path)
             self.app.add_widget(text_file_path)
@@ -158,13 +164,13 @@ if __name__ == '__main__':
             file_chooser_layout.add_widget(btn_cancel_file)
 
         def build_coordinate_column_options(self):
-            lbl_longitude = Label(text='Longitudinal Column:', size_hint=(.2, .05), pos_hint={'x': 0.15, 'y': .45})
+            lbl_longitude = Label(text='Longitudinal Column:', size_hint=(.2, .05), pos_hint={'x': 0.15, 'y': .6})
             text_longitude = TextInput(text="longitude", multiline=False, size_hint=(.15, .05),
-                                       pos_hint={'x': .35, 'y': .45})
+                                       pos_hint={'x': .35, 'y': .6})
             text_longitude.bind(text=self.select_longitude_column)
-            lbl_latitude = Label(text='Latitudinal Column:', size_hint=(.2, .05), pos_hint={'x': 0.5, 'y': .45})
+            lbl_latitude = Label(text='Latitudinal Column:', size_hint=(.2, .05), pos_hint={'x': 0.5, 'y': .6})
             text_latitude = TextInput(text="latitude", multiline=False, size_hint=(.15, .05),
-                                      pos_hint={'x': .69, 'y': .45})
+                                      pos_hint={'x': .69, 'y': .6})
             text_latitude.bind(text=self.select_latitude_column)
             self.app.add_widget(lbl_longitude)
             self.app.add_widget(lbl_latitude)
@@ -174,21 +180,21 @@ if __name__ == '__main__':
         def build_colormap_options(self):
             spn_color_map = Spinner(text='Color Map', values=('fire', 'bgy', 'bgyw', 'kbc', 'blues', 'bmw', 'bmy',
                                                               'kgy', 'gray', 'dimgray', 'kb', 'kg', 'kr'),
-                                    size_hint=(.15, .05), pos_hint={'x': .12, 'y': .55}, sync_height=True)
+                                    size_hint=(.15, .05), pos_hint={'x': .12, 'y': .7}, sync_height=True)
             spn_color_map.bind(text=self.select_color_map)
             self.app.add_widget(spn_color_map)
 
         def build_optional_arguments(self):
             lbl_optional_arguments = Label(text='Static Render Arguments', size_hint=(.1, .05),
-                                           pos_hint={'x': 0.4, 'y': .4})
-            lbl_min_zoom = Label(text='Min Zoom:', size_hint=(.1, .05), pos_hint={'x': 0.11, 'y': .3})
+                                           pos_hint={'x': 0.4, 'y': .5})
+            lbl_min_zoom = Label(text='Min Zoom:', size_hint=(.1, .05), pos_hint={'x': 0.11, 'y': .4})
             self.spn_min_zoom = Spinner(text='0', values=('0', '1', '2', '3', '4', '5', '6',
                                                           '7', '8', '9', '10', '11', '12'),
-                                        size_hint=(.05, .05), pos_hint={'x': .21, 'y': .3}, sync_height=True)
-            lbl_max_zoom = Label(text='Max Zoom:', size_hint=(.1, .05), pos_hint={'x': 0.11, 'y': .2})
+                                        size_hint=(.05, .05), pos_hint={'x': .21, 'y': .4}, sync_height=True)
+            lbl_max_zoom = Label(text='Max Zoom:', size_hint=(.1, .05), pos_hint={'x': 0.11, 'y': .3})
             self.spn_max_zoom = Spinner(text='0', values=('0', '1', '2', '3', '4', '5', '6',
                                                           '7', '8', '9', '10', '11', '12'),
-                                        size_hint=(.05, .05), pos_hint={'x': .21, 'y': .2}, sync_height=True)
+                                        size_hint=(.05, .05), pos_hint={'x': .21, 'y': .3}, sync_height=True)
             self.spn_min_zoom.disabled = True
             self.spn_max_zoom.disabled = True
             self.spn_min_zoom.bind(text=self.select_min_zoom)
@@ -200,12 +206,12 @@ if __name__ == '__main__':
             self.app.add_widget(self.spn_max_zoom)
 
         def build_output_path_options(self):
-            lbl_file_path = Label(text='Output Directory', size_hint=(.1, .05), pos_hint={'x': 0.5, 'y': .3})
+            lbl_file_path = Label(text='Output Directory', size_hint=(.1, .05), pos_hint={'x': 0.5, 'y': .4})
             self.text_output_directory = TextInput(text="", multiline=False, size_hint=(.5, .05),
-                                                   pos_hint={'x': .3, 'y': .25})
+                                                   pos_hint={'x': .3, 'y': .35})
             self.text_output_directory.bind(text=self.select_output_dir)
             self.text_output_directory.disabled = True
-            self.btn_browse_directory = Button(text='Browse', size_hint=(.09, .05), pos_hint={'x': .8, 'y': .25})
+            self.btn_browse_directory = Button(text='Browse', size_hint=(.09, .05), pos_hint={'x': .8, 'y': .35})
             self.btn_browse_directory.disabled = True
             self.btn_browse_directory.bind(on_release=lambda show_file_selection_dialog: file_chooser_dialog.open())
             self.app.add_widget(lbl_file_path)
@@ -302,7 +308,8 @@ if __name__ == '__main__':
                 exit(0)
 
         def run_render(self, instance):
-            if not os.path.isfile(self.file_path) and self.file_format == 'CSV':
+            if not os.path.isfile(self.file_path) and (
+                    self.file_format == 'CSV' or self.file_format == 'Shapefile' or self.file_format == 'GeoJSON'):
                 popup = Popup(title='Error', content=Label(text='Must select a file.'), size_hint=(.7, .7),
                               auto_dismiss=True)
                 popup.open()
@@ -338,10 +345,6 @@ if __name__ == '__main__':
                 self.render_thread = multiprocessing.Process(target=_render, args=(params,))
 
                 self.render_thread.start()
-
-
-
-
 
 
     DatashaderMapTiler().run()

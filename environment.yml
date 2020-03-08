@@ -27,11 +27,12 @@ dependencies:
   - decorator=4.4.1=py_0
   - defusedxml=0.6.0=py_0
   - distributed=2.11.0=py37_0
+  - docutils=0.16=py37_0
   - entrypoints=0.3=py37_0
   - fastparquet=0.3.3=py37hc8d92b1_0
   - freetype=2.9.1=ha9979f8_1
   - fsspec=0.6.2=py_0
-  - gooey=1.0.3=py37h6538335_0
+  - glew=2.0.0=he025d50_1003
   - heapdict=1.0.1=py_0
   - holoviews=1.12.7=py_0
   - icc_rt=2019.0.0=h0cc432a_1
@@ -45,14 +46,16 @@ dependencies:
   - ipython_genutils=0.2.0=py37_0
   - jedi=0.16.0=py37_0
   - jinja2=2.11.1=py_0
-  - jpeg=9b=hb83a4c4_2
+  - jpeg=9c=hfa6e2cd_1001
   - jsonschema=3.2.0=py37_0
   - jupyter_client=5.3.4=py37_0
   - jupyter_core=4.6.1=py37_0
+  - kivy=1.11.1=py37hbc14df2_0
   - kiwisolver=1.1.0=py37ha925a31_0
   - libpng=1.6.37=h2a8f88b_0
   - libsodium=1.0.16=h9d3ae62_0
   - libtiff=4.1.0=h56a325e_0
+  - libwebp=1.0.2=hfa6e2cd_5
   - llvmlite=0.31.0=py37ha925a31_0
   - locket=0.2.0=py37_1
   - m2w64-gcc-libgfortran=5.3.0=6
@@ -117,11 +120,16 @@ dependencies:
   - requests=2.22.0=py37_1
   - scikit-image=0.16.2=py37h47e9c7a_0
   - scipy=1.4.1=py37h9439919_0
+  - sdl2=2.0.10=h6538335_0
+  - sdl2_image=2.0.5=h2da4f57_1
+  - sdl2_mixer=2.0.4=h6538335_0
+  - sdl2_ttf=2.0.15=h4636d2b_0
   - send2trash=1.5.0=py37_0
   - setuptools=45.2.0=py37_0
   - sip=4.19.8=py37h6538335_0
   - six=1.14.0=py37_0
-  - snappy=1.1.8=he025d50_1
+  - smpeg2=2.0.0=h6538335_1
+  - snappy=1.1.7=h777316e_3
   - sortedcontainers=2.1.0=py37_0
   - sqlite=3.31.1=he774522_0
   - tbb=2020.0=h74a9793_0
@@ -143,7 +151,6 @@ dependencies:
   - win_inet_pton=1.1.0=py37_0
   - wincertstore=0.2=py37_0
   - winpty=0.4.3=4
-  - wxpython=4.0.4=py37ha925a31_0
   - xarray=0.15.0=py_0
   - xz=5.2.4=h2fa13f4_4
   - yaml=0.1.7=hc54c509_2

@@ -24,7 +24,7 @@ class StaticRenderer:
 
     def render_to_disk(self):
         for result in render_tiles(self._get_extents(),
-                                   range(self.min_zoom, self.max_zoom),
+                                   range(self.min_zoom, self.max_zoom + 1),
                                    load_data_func=self._load_data_func,
                                    rasterize_func=self._rasterize_func,
                                    shader_func=self._shader_func,

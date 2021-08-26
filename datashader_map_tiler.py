@@ -1,12 +1,13 @@
+import multiprocessing
 import os
 
-import multiprocessing
-
-from datashader.utils import lnglat_to_meters
-from modes.static_render import StaticRenderer
-from modes.dynamic_render import DynamicRenderer
-import pandas as pd
 import dask.dataframe as dd
+import pandas as pd
+from holoviews.element.tiles import lon_lat_to_easting_northing
+
+from modes.dynamic_render import DynamicRenderer
+from modes.static_render import StaticRenderer
+
 
 def _render(params):
     data = _load_data(params['file_format'], params['file_path'], params['coordinate_system'], params['longitude'],
@@ -39,7 +40,7 @@ def _load_data(file_format, file, coordinate_system, longitude, latitude):
         # EPSG3857 Coordinate System only supports Latitude bounds of -85.06 to 85.06
         df = df.loc[df[latitude].between(-85.06, 85.06)]
         # Convert to XY Coordinate System
-        df['x'], df['y'] = lnglat_to_meters(df[longitude], df[latitude])
+        df['x'], df['y'] = lon_lat_to_easting_northing(df[longitude], df[latitude])
         df = df.drop(columns=[longitude, latitude], axis=1)
     elif coordinate_system == 'Web Mercator':
         df = df.rename(columns={longitude: 'x', latitude: 'y'})
